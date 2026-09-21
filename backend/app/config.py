@@ -17,6 +17,8 @@ class Settings(BaseSettings):
 
     OLLAMA_BASE_URL: str = "http://localhost:11434"
     OLLAMA_MODEL: str = "llama3.2"
+    OPENAI_API_KEY: str = ""
+    OPENAI_MODEL: str = "gpt-5.6-luna"
 
     CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
 

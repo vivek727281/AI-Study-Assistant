@@ -1,6 +1,6 @@
 import json
 import re
-import requests
+from openai import OpenAI
 from fastapi import HTTPException
 from app.config import settings
 
@@ -13,33 +13,25 @@ def _truncate(text: str) -> str:
     return text
 
 
-def call_ollama(prompt: str, system: str = "", temperature: float = 0.4) -> str:
-    """Calls the local Ollama server running Llama 3.2."""
-    url = f"{settings.OLLAMA_BASE_URL}/api/generate"
-    payload = {
-        "model": settings.OLLAMA_MODEL,
-        "prompt": prompt,
-        "system": system,
-        "stream": False,
-        "options": {"temperature": temperature},
-    }
+def call_openai(prompt: str, system: str = "", temperature: float = 0.4) -> str:
+    """Calls OpenAI API for AI generation."""
     try:
-        response = requests.post(url, json=payload, timeout=180)
-        response.raise_for_status()
-        data = response.json()
-        return data.get("response", "").strip()
-    except requests.exceptions.ConnectionError:
-        raise HTTPException(
-            status_code=503,
-            detail="Cannot connect to Ollama. Make sure Ollama is running "
-                   "('ollama serve') and the llama3.2 model is pulled "
-                   "('ollama pull llama3.2').",
-        )
-    except requests.exceptions.Timeout:
-        raise HTTPException(status_code=504, detail="Ollama request timed out.")
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"AI generation failed: {exc}")
+        client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
+        response = client.responses.create(
+            model=settings.OPENAI_MODEL,
+            instructions=system,
+            input=prompt,
+        )
+
+        return response.output_text.strip()
+
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"AI generation failed: {exc}"
+        )
+  
 
 def _extract_json(raw: str):
     """Extract first valid JSON array/object found in model output."""
@@ -79,7 +71,7 @@ def generate_summary(text: str, length: str = "medium") -> str:
         f"Use markdown formatting where helpful. Do not add information not present in the text.\n\n"
         f"STUDY MATERIAL:\n{text}\n\nSUMMARY:"
     )
-    return call_ollama(prompt, system=system)
+    return call_openai(prompt, system=system)
 
 
 def answer_question(text: str, question: str) -> str:
@@ -94,7 +86,7 @@ def answer_question(text: str, question: str) -> str:
         f"QUESTION: {question}\n\n"
         f"Provide a clear, well-explained ANSWER:"
     )
-    return call_ollama(prompt, system=system)
+    return call_openai(prompt, system=system)
 
 
 def generate_quiz(text: str, num_questions: int = 10) -> list:
@@ -111,7 +103,7 @@ def generate_quiz(text: str, num_questions: int = 10) -> list:
         f'"correct_answer": "the exact text of the correct option", "explanation": "brief explanation"}}]\n\n'
         f"STUDY MATERIAL:\n{text}\n\nJSON:"
     )
-    raw = call_ollama(prompt, system=system, temperature=0.5)
+    raw = call_openai(prompt, system=system, temperature=0.5)
     data = _extract_json(raw)
     if not isinstance(data, list) or len(data) == 0:
         raise HTTPException(status_code=502, detail="AI failed to generate a valid quiz.")
@@ -131,7 +123,7 @@ def generate_flashcards(text: str, num_cards: int = 10) -> list:
         f'[{{"question": "...", "answer": "..."}}]\n\n'
         f"STUDY MATERIAL:\n{text}\n\nJSON:"
     )
-    raw = call_ollama(prompt, system=system, temperature=0.5)
+    raw = call_openai(prompt, system=system, temperature=0.5)
     data = _extract_json(raw)
     if not isinstance(data, list) or len(data) == 0:
         raise HTTPException(status_code=502, detail="AI failed to generate valid flashcards.")

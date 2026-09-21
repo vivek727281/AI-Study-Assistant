@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
-import { Send, MessageSquareText, Bot, User, FileText } from 'lucide-react'
+import { MessageSquare, MessageSquareText, Send, ChevronDown, FileText } from 'lucide-react'
 import api from '../api/axios'
 
 export default function Chat() {
   const [files, setFiles] = useState([])
   const [selectedFile, setSelectedFile] = useState('')
+  const [fileDropdownOpen, setFileDropdownOpen] = useState(false)
   const [question, setQuestion] = useState('')
   const [messages, setMessages] = useState([])
   const [loading, setLoading] = useState(false)
@@ -49,18 +50,56 @@ export default function Chat() {
         <p className="text-gray-500 dark:text-gray-400 mt-1">Ask questions about your study material</p>
       </div>
 
-      <div className="glass-card p-4 mb-4 flex items-center gap-3">
+      <div className="glass-card relative z-50 p-4 mb-4 flex items-center gap-3">
         <FileText className="w-4 h-4 text-primary-500 shrink-0" />
-        <select
-          value={selectedFile}
-          onChange={(e) => setSelectedFile(e.target.value)}
-          className="input-field"
+       <div className="relative flex-1">
+        <button
+          type="button"
+          onClick={() => setFileDropdownOpen(!fileDropdownOpen)}
+          className="input-field w-full flex items-center justify-between text-left cursor-pointer"
         >
-          <option value="">Select a study file...</option>
-          {files.map((f) => (
-            <option key={f.id} value={f.id}>{f.filename}</option>
-          ))}
-        </select>
+          <span>
+            {selectedFile
+              ? files.find((f) => String(f.id) === String(selectedFile))?.filename
+                : 'Select a study file...'}
+          </span>
+
+          <ChevronDown
+            className={`w-4 h-4 transition-transform ${
+              fileDropdownOpen ? 'rotate-180' : ''
+            }`}
+          />
+        </button>
+
+        {fileDropdownOpen && (
+          <div className="absolute left-0 top-full z-50 mt-2 w-full rounded-xl border border-purple-500/40 bg-white dark:bg-[#1e1e2e] shadow-xl overflow-hidden">
+            <button
+              type="button"
+                onClick={() => {
+                  setSelectedFile('')
+                  setFileDropdownOpen(false)
+              }}
+              className="w-full px-4 py-3 text-left text-gray-500 dark:text-gray-400 hover:bg-purple-500/10 transition-colors"
+            >
+              Select a study file...
+            </button>
+
+            {files.map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => {
+                  setSelectedFile(f.id)
+                  setFileDropdownOpen(false)
+                }}
+                className="w-full px-4 py-3 text-left text-gray-800 dark:text-white hover:bg-purple-500/10 transition-colors"
+              >
+                {f.filename}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
       </div>
 
       <div className="flex-1 glass-card p-4 md:p-6 overflow-y-auto mb-4 min-h-[400px] max-h-[55vh]">

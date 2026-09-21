@@ -1,6 +1,7 @@
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from typing import Optional, List
 from datetime import datetime
+from fastapi.staticfiles import StaticFiles
 
 
 # ---------- Auth ----------
@@ -20,7 +21,9 @@ class UserOut(BaseModel):
     id: int
     full_name: str
     email: EmailStr
+    profile_image: Optional[str] = None
     created_at: datetime
+    
 
 
 class Token(BaseModel):

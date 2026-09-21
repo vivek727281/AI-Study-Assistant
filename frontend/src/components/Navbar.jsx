@@ -46,8 +46,16 @@ export default function Navbar({ onMenuClick }) {
           </button>
 
           <div className="hidden md:flex items-center gap-3 pl-3 border-l border-gray-200 dark:border-white/10">
-            <div className="w-9 h-9 rounded-full bg-gradient-brand flex items-center justify-center text-white font-bold text-sm">
-              {user?.full_name?.charAt(0)?.toUpperCase() || 'U'}
+            <div className="w-9 h-9 rounded-full overflow-hidden bg-gradient-brand flex items-center justify-center text-white font-bold text-sm">
+              {user?.profile_image ? (
+                <img
+                  src={`http://127.0.0.1:8000${user.profile_image}`}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                user?.full_name?.charAt(0)?.toUpperCase() || 'U'
+              )}
             </div>
             <div className="leading-tight">
               <p className="text-sm font-semibold">{user?.full_name}</p>

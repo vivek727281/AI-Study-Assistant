@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
-import { FileText, Download, Sparkles, Copy } from 'lucide-react'
+import { FileText, Sparkles, ChevronDown, Copy, Download } from 'lucide-react'
 import api from '../api/axios'
 import Card from '../components/Card.jsx'
 import Loader from '../components/Loader.jsx'
@@ -15,6 +15,7 @@ const LENGTHS = [
 export default function Summary() {
   const [files, setFiles] = useState([])
   const [selectedFile, setSelectedFile] = useState('')
+  const [fileDropdownOpen, setFileDropdownOpen] = useState(false)
   const [length, setLength] = useState('medium')
   const [summary, setSummary] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -72,12 +73,54 @@ export default function Summary() {
         <div className="grid md:grid-cols-2 gap-4 mb-4">
           <div>
             <label className="text-sm font-medium mb-1.5 block">Study File</label>
-            <select value={selectedFile} onChange={(e) => setSelectedFile(e.target.value)} className="input-field">
-              <option value="">Select a file...</option>
-              {files.map((f) => (
-                <option key={f.id} value={f.id}>{f.filename}</option>
-              ))}
-            </select>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setFileDropdownOpen(!fileDropdownOpen)}
+              className="input-field w-full flex items-center justify-between text-left cursor-pointer"
+            >
+              <span>
+                {selectedFile
+                  ? files.find((f) => String(f.id) === String(selectedFile))?.filename
+                  : 'Select a file...'}
+              </span>
+
+              <ChevronDown
+                className={`w-4 h-4 transition-transform ${
+                  fileDropdownOpen ? 'rotate-180' : ''
+                }`}
+              />
+            </button>
+
+            {fileDropdownOpen && (
+              <div className="absolute z-50 w-full mt-2 rounded-xl border border-purple-500/40 bg-white dark:bg-[#1e1e2e] shadow-xl overflow-hidden">
+                <button
+                  type="button"
+                    onClick={() => {
+                      setSelectedFile('')
+                      setFileDropdownOpen(false)
+                    }}
+                    className="w-full px-4 py-3 text-left text-gray-500 dark:text-gray-400 hover:bg-purple-500/10 transition-colors"
+                >
+                    Select a file...
+                </button>
+
+                {files.map((f) => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedFile(f.id)
+                      setFileDropdownOpen(false)
+                    }}
+                    className="w-full px-4 py-3 text-left text-gray-800 dark:text-white hover:bg-purple-500/10 transition-colors"
+                  >
+                    {f.filename}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           </div>
           <div>
             <label className="text-sm font-medium mb-1.5 block">Summary Length</label>

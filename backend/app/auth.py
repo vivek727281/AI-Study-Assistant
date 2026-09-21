@@ -3,6 +3,7 @@ from typing import Optional
 from jose import jwt, JWTError
 from passlib.context import CryptContext
 from app.config import settings
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

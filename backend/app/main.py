@@ -1,5 +1,6 @@
 import logging
 from fastapi import FastAPI, Request, status
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
@@ -19,6 +20,7 @@ app = FastAPI(
     description="AI-powered Study Assistant API - Summaries, Q&A, Quizzes, Flashcards using local Llama 3.2",
     version="1.0.0",
 )
+app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
 
 app.add_middleware(
     CORSMiddleware,

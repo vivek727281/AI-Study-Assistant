@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
-import { User, Mail, Shield, Server, CheckCircle2, XCircle, Moon, Sun } from 'lucide-react'
+import { User, Mail, Shield, Server, CheckCircle2, XCircle, Moon, Sun, Camera } from 'lucide-react'
 import api from '../api/axios'
 import { useAuth } from '../context/AuthContext.jsx'
 import Card from '../components/Card.jsx'
 
 export default function Settings() {
-  const { user } = useAuth()
+  const { user, updateUser } = useAuth()
   const [health, setHealth] = useState(null)
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [dark, setDark] = useState(() => localStorage.getItem('sa_theme') !== 'light')
 
   useEffect(() => {
@@ -32,6 +33,62 @@ export default function Settings() {
       <Card hover={false}>
         <h2 className="font-bold text-lg mb-4">Profile</h2>
         <div className="space-y-4">
+        <div className="flex items-center gap-4 pb-4 border-b border-gray-200 dark:border-white/10">
+  <div className="w-20 h-20 rounded-full overflow-hidden bg-gradient-brand flex items-center justify-center text-white text-2xl font-bold">
+    {user?.profile_image ? (
+      <img
+        src={`http://127.0.0.1:8000${user.profile_image}`}
+        alt="Profile"
+        className="w-full h-full object-cover"
+      />
+    ) : (
+      user?.full_name?.charAt(0)?.toUpperCase() || 'U'
+    )}
+  </div>
+
+  <div>
+    <p className="font-medium">Profile Photo</p>
+    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+      JPG, PNG or WEBP. Max 5MB.
+    </p>
+
+    <label className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-brand text-white text-sm font-medium cursor-pointer hover:opacity-90 transition-opacity">
+      <Camera className="w-4 h-4" />
+      {uploadingPhoto ? 'Uploading...' : 'Upload Photo'}
+      <input
+  type="file"
+  accept="image/jpeg,image/png,image/webp"
+  className="hidden"
+  disabled={uploadingPhoto}
+  onChange={async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    try {
+      setUploadingPhoto(true)
+
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const { data } = await api.post('/auth/profile-image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+      updateUser(data)
+
+      toast.success('Profile photo updated successfully')
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to upload profile photo')
+    } finally {
+      setUploadingPhoto(false)
+      e.target.value = ''
+    }
+  }}
+/>
+    </label>
+  </div>
+</div>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-brand-soft flex items-center justify-center">
               <User className="w-5 h-5 text-primary-500" />
